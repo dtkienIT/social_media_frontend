@@ -8,8 +8,9 @@ const CreatePost = ({ onPostCreated }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    if (!content.trim() && !image) return alert("Vui lòng nhập nội dung!");
     
+    setLoading(true);
     const formData = new FormData();
     formData.append('content', content);
     if (image) formData.append('image', image);
@@ -18,17 +19,17 @@ const CreatePost = ({ onPostCreated }) => {
       await api.post('/posts/create', formData);
       setContent('');
       setImage(null);
-      alert("Đăng bài thành công!");
-      onPostCreated(); // Tải lại danh sách bài viết
+      onPostCreated(); // Gọi hàm này để Newsfeed tải lại danh sách bài mới
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể đăng bài"));
+      console.log(err);
+      alert("Đăng bài thất bại!");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ background: '#fff', padding: '15px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)', marginBottom: '20px' }}>
+    <div style={{ background: '#fff', padding: '15px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '20px' }}>
       <form onSubmit={handleSubmit}>
         <textarea 
           placeholder="Bạn đang nghĩ gì?" 
@@ -37,10 +38,10 @@ const CreatePost = ({ onPostCreated }) => {
           style={{ width: '100%', border: 'none', outline: 'none', fontSize: '16px', resize: 'none' }}
           rows="3"
         />
-        <hr />
+        <hr style={{ border: '0.5px solid #eee' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <input type="file" onChange={(e) => setImage(e.target.files[0])} />
-          <button type="submit" disabled={loading} style={{ background: '#1877f2', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: '6px', fontWeight: 'bold' }}>
+          <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files[0])} />
+          <button type="submit" disabled={loading} style={{ background: '#1877f2', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
             {loading ? 'Đang đăng...' : 'Đăng'}
           </button>
         </div>

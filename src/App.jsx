@@ -8,6 +8,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Newsfeed />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/profile/:userId" element={<Profile />} />
       </Routes>
     </Router>
   );
