@@ -8,11 +8,10 @@ const Newsfeed = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
-  // Lấy dữ liệu từ localStorage
   const token = localStorage.getItem('token');
-  const currentUserId = localStorage.getItem('userId');
+  // Ép kiểu về String để so sánh chính xác
+  const currentUserId = String(localStorage.getItem('userId'));
 
-  // 1. Hàm lấy danh sách bài viết (Sắp xếp mới nhất lên đầu)
   const fetchPosts = useCallback(async () => {
     try {
       const res = await api.get('/posts/all');
@@ -29,16 +28,13 @@ const Newsfeed = () => {
     fetchPosts();
   }, [fetchPosts]);
 
-  // 2. Logic Đăng xuất
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
+    localStorage.clear();
     navigate('/login');
   };
 
-  // 3. Xử lý Like bài viết (Cập nhật giao diện ngay lập tức)
   const handleLike = async (postId) => {
-    if (!token) return alert("Vui lòng đăng nhập để Like!");
+    if (!token) return alert("Vui lòng đăng nhập!");
     try {
       const res = await api.put(`/posts/${postId}/like`);
       setPosts(prevPosts => 
@@ -46,20 +42,17 @@ const Newsfeed = () => {
           post.id === postId ? { ...post, likes: res.data.likes } : post
         )
       );
-    } catch (err) {
-      console.error("Lỗi Like:", err);
-    }
+    } catch (err) { console.error(err); }
   };
 
-  // 4. Xử lý Xóa bài viết (CHỖ BẠN ĐANG THIẾU)
+  // HÀM XỬ LÝ XÓA
   const handleDelete = async (postId) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa bài viết này?")) {
+    if (window.confirm("Bạn có chắc muốn xóa bài viết này?")) {
       try {
         await api.delete(`/posts/${postId}`);
-        // Xóa bài viết khỏi giao diện ngay lập tức
         setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
       } catch  {
-        alert("Xóa thất bại! Bạn có thể không phải là chủ bài đăng.");
+        alert("Không thể xóa bài viết này!");
       }
     }
   };
@@ -69,7 +62,7 @@ const Newsfeed = () => {
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
       
-      {/* NAVBAR: Login, Register, Logout */}
+      {/* NAVBAR */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', background: '#fff', padding: '10px 20px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
         <h3 style={{ color: '#1877f2', margin: 0 }}>SocialApp</h3>
         <div>
@@ -79,57 +72,49 @@ const Newsfeed = () => {
               <Link to="/register" style={{ textDecoration: 'none', color: '#42b72a', fontWeight: 'bold' }}>Đăng ký</Link>
             </>
           ) : (
-            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-              <Link to={`/profile/${currentUserId}`} style={{ textDecoration: 'none', color: '#050505' }}>Cá nhân</Link>
-              <button onClick={handleLogout} style={{ background: '#fa3e3e', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Đăng xuất</button>
-            </div>
+            <button onClick={handleLogout} style={{ background: '#fa3e3e', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer' }}>Đăng xuất</button>
           )}
         </div>
       </div>
 
-      {/* CREATE POST: Chỉ hiện khi đã đăng nhập */}
-      {token ? <CreatePost onPostCreated={fetchPosts} /> : <p style={{ textAlign: 'center' }}>Đăng nhập để đăng bài.</p>}
+      {token && <CreatePost onPostCreated={fetchPosts} />}
 
-      {/* FEED: Danh sách bài viết */}
+      {/* DANH SÁCH BÀI VIẾT */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {posts.map((post) => {
+          // KIỂM TRA QUYỀN XÓA (Rất quan trọng)
+          const isOwner = String(post.userId) === currentUserId;
           const isLiked = post.likes?.includes(currentUserId);
-          // Kiểm tra xem ID người dùng hiện tại có khớp với người đăng bài không
-          const isOwner = String(post.userId) === String(currentUserId);
 
           return (
             <div key={post.id} style={{ background: '#fff', borderRadius: '8px', padding: '15px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)', position: 'relative' }}>
               
-              {/* NÚT XÓA: Chỉ hiện cho chủ bài đăng */}
+              {/* NÚT XÓA: Chỉ hiện nếu isOwner là true */}
               {isOwner && (
                 <button 
                   onClick={() => handleDelete(post.id)}
-                  style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}
+                  style={{ 
+                    position: 'absolute', top: '15px', right: '15px', 
+                    background: '#f2f2f2', border: 'none', borderRadius: '50%',
+                    width: '30px', height: '30px', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  }}
                 >
                   🗑️
                 </button>
               )}
 
-              {/* Header: Người đăng */}
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                <img src={post.User?.avatar || 'https://via.placeholder.com/40'} style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px', objectFit: 'cover' }} alt="avatar" />
-                <Link to={`/profile/${post.userId}`} style={{ textDecoration: 'none', color: '#050505', fontWeight: 'bold' }}>
-                  {post.User?.fullName}
-                </Link>
+                <img src={post.User?.avatar || 'https://via.placeholder.com/40'} style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px' }} alt="" />
+                <strong>{post.User?.fullName}</strong>
               </div>
 
-              {/* Nội dung bài đăng */}
               <p style={{ whiteSpace: 'pre-wrap' }}>{post.content}</p>
-              {post.image && <img src={post.image} style={{ width: '100%', borderRadius: '8px', marginTop: '10px' }} alt="post" />}
+              {post.image && <img src={post.image} style={{ width: '100%', borderRadius: '8px' }} alt="" />}
 
-              {/* Tương tác Like */}
-              <div style={{ borderTop: '1px solid #ebedf0', marginTop: '12px', paddingTop: '10px' }}>
-                <button 
-                  onClick={() => handleLike(post.id)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: isLiked ? '#e0245e' : '#65676b', display: 'flex', alignItems: 'center', gap: '5px' }}
-                >
-                  <span style={{ fontSize: '20px' }}>{isLiked ? '❤️' : '🤍'}</span>
-                  <span>{post.likes?.length || 0} lượt thích</span>
+              <div style={{ marginTop: '10px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+                <button onClick={() => handleLike(post.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: isLiked ? '#e0245e' : '#65676b' }}>
+                  {isLiked ? '❤️' : '🤍'} {post.likes?.length || 0} Like
                 </button>
               </div>
             </div>
