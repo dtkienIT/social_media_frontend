@@ -4,74 +4,62 @@ import api from '../api';
 
 const EditProfile = () => {
   const [fullName, setFullName] = useState('');
-  const [avatar, setAvatar] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
-  const userId = localStorage.getItem('userId');
+  const myId = localStorage.getItem('userId');
 
-  const handleUpdate = async (e) => {
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
+    setPreview(URL.createObjectURL(selectedFile));
+  };
+
+  const handleSave = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
-    // Sử dụng FormData để gửi file
+    setUploading(true);
     const formData = new FormData();
     formData.append('fullName', fullName);
-    if (avatar) {
-      formData.append('avatar', avatar);
-    }
+    if (file) formData.append('avatar', file);
 
     try {
-      await api.put('/users/update', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      alert("Cập nhật thông tin thành công!");
-      navigate(`/profile/${userId}`);
-    } catch (err) {
-      console.error(err);
-      alert("Có lỗi xảy ra khi cập nhật!");
+      await api.put('/users/update', formData);
+      alert("Cập nhật thành công!");
+      navigate(`/profile/${myId}`);
+    } catch {
+      alert("Lỗi khi cập nhật!");
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-      <h2 style={{ textAlign: 'center' }}>Chỉnh sửa cá nhân</h2>
-      <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Họ và tên mới:</label>
+    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', background: '#fff', borderRadius: '8px' }}>
+      <h3>Chỉnh sửa trang cá nhân</h3>
+      <form onSubmit={handleSave}>
+        <div style={{ marginBottom: '15px' }}>
+          <label>Tên hiển thị:</label>
           <input 
             type="text" 
-            placeholder="Nhập tên mới..." 
-            value={fullName}
+            value={fullName} 
             onChange={(e) => setFullName(e.target.value)}
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ddd' }}
-            required
+            style={{ width: '100%', padding: '8px', marginTop: '5px' }}
           />
         </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Ảnh đại diện mới:</label>
-          <input 
-            type="file" 
-            accept="image/*"
-            onChange={(e) => setAvatar(e.target.files[0])}
-          />
+        
+        <div style={{ marginBottom: '15px' }}>
+          <label>Ảnh đại diện mới:</label>
+          <input type="file" onChange={handleFileChange} style={{ display: 'block', marginTop: '5px' }} />
+          {preview && <img src={preview} style={{ width: '100px', marginTop: '10px', borderRadius: '50%' }} alt="Preview" />}
         </div>
+
         <button 
           type="submit" 
-          disabled={loading}
-          style={{ padding: '10px', background: '#1877f2', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+          disabled={uploading}
+          style={{ width: '100%', padding: '10px', background: '#1877f2', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
         >
-          {loading ? "Đang lưu..." : "Lưu thay đổi"}
-        </button>
-        <button 
-          type="button" 
-          onClick={() => navigate(-1)}
-          style={{ background: 'none', border: 'none', color: '#65676b', cursor: 'pointer' }}
-        >
-          Hủy bỏ
+          {uploading ? "Đang tải lên..." : "Lưu thay đổi"}
         </button>
       </form>
     </div>

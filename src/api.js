@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // Sử dụng biến môi trường, mặc định là localhost nếu chưa có
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+  baseURL: 'https://social-media-jev1.onrender.com/api',
 });
 
+// Tự động thêm token vào mỗi request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -13,4 +13,5 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+export const BACKEND_DOMAIN = "https://social-media-jev1.onrender.com";
 export default api;
