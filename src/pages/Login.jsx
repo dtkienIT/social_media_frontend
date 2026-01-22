@@ -9,9 +9,14 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await api.post('/auth/login', { email, password });
+      
+      // LƯU CẢ TOKEN VÀ USERID (Cực kỳ quan trọng)
       localStorage.setItem('token', res.data.token);
+      localStorage.setItem('userId', res.data.user.id); 
+
       alert("Đăng nhập thành công!");
-      window.location.href = '/';
+      // Dùng window.location.href để làm mới toàn bộ trạng thái ứng dụng
+      window.location.href = '/'; 
     } catch (err) {
       console.error(err);
       alert("Sai thông tin đăng nhập");
