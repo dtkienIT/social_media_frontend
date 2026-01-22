@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import CreatePost from '../components/CreatePost';
+import CommentSection from '../components/CommentSection';
 
 const Newsfeed = () => {
   const [posts, setPosts] = useState([]);
@@ -156,6 +157,12 @@ const Newsfeed = () => {
                   {post.likes?.length || 0} Thích
                 </button>
               </div>
+
+              {/* TÍCH HỢP COMMENT SECTION */}
+              <CommentSection 
+                postId={post.id} 
+                currentUserId={currentUserId} 
+              />
             </div>
           );
         })}
