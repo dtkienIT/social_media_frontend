@@ -126,7 +126,7 @@ const Newsfeed = () => {
           style={{ color: "#1877f2", margin: 0, fontSize: "24px", cursor: "pointer" }}
           onClick={() => window.scrollTo(0, 0)}
         >
-          SocialApp
+          KaWeb
         </h3>
 
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
