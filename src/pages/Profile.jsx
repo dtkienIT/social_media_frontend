@@ -10,9 +10,32 @@ const Profile = () => {
   const [userPosts, setUserPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalLikes, setTotalLikes] = useState(0);
+  const [selectedImg, setSelectedImg] = useState(null); // State quản lý ảnh đang phóng to
 
+  // --- LOGIC PHÓNG TO ẢNH ---
+    const openImage = (url) => {
+      setSelectedImg(url);
+      document.body.style.overflow = "hidden"; // Ngăn cuộn trang
+    };
+  
+    const closeImage = useCallback(() => {
+      setSelectedImg(null);
+      document.body.style.overflow = "auto"; // Cho phép cuộn lại
+    }, []);
+  
+    // Lắng nghe phím ESC để đóng ảnh
+    useEffect(() => {
+      const handleEsc = (event) => {
+        if (event.keyCode === 27) closeImage();
+      };
+      window.addEventListener("keydown", handleEsc);
+      return () => window.removeEventListener("keydown", handleEsc);
+    }, [closeImage]);
+  
+  // Lay Id
   const myId = String(localStorage.getItem('userId') || "").trim();
 
+  
   const fetchProfileData = useCallback(async () => {
     try {
       setLoading(true);
@@ -75,10 +98,31 @@ const Profile = () => {
     <div style={{ maxWidth: '700px', margin: '0 auto', padding: '20px', fontFamily: 'Arial, sans-serif', backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
       <Link to="/" style={{ textDecoration: 'none', color: '#1877f2', fontWeight: 'bold' }}>← Quay lại Bảng tin</Link>
       
+      {/* --- MODAL PHÓNG TO ẢNH --- */}
+      {selectedImg && (
+        <div 
+          onClick={closeImage}
+          style={{
+            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+            backgroundColor: 'rgba(0,0,0,0.9)', display: 'flex', justifyContent: 'center',
+            alignItems: 'center', zIndex: 2000, cursor: 'zoom-out'
+          }}
+        >
+          <img 
+            src={selectedImg} 
+            alt="Large view" 
+            style={{ maxWidth: '95%', maxHeight: '95%', borderRadius: '4px', objectFit: 'contain' }}
+            onClick={(e) => e.stopPropagation()} // Không đóng khi click vào ảnh
+          />
+          <span style={{ position: 'absolute', top: '20px', right: '30px', color: '#fff', fontSize: '40px', cursor: 'pointer' }}>&times;</span>
+        </div>
+      )}
+
       {/* Header Profile */}
       <div style={{ background: '#fff', padding: '30px', borderRadius: '12px', textAlign: 'center', marginTop: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
         <img 
           src={profileUser.avatar || 'https://placehold.co/150'} 
+          onClick={() => openImage(profileUser.avatar || "https://placehold.co/150")}
           style={{ width: '130px', height: '130px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #fff', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
           alt="Avatar"
         />
