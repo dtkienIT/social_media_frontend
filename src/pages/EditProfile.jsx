@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+import { toast } from 'react-toastify';
 
 const EditProfile = () => {
   const [fullName, setFullName] = useState('');
@@ -33,10 +34,10 @@ const EditProfile = () => {
       await api.put('/users/update', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      alert("Cập nhật thành công!");
+      toast.success("Cập nhật thành công!");
       navigate(`/profile/${myId}`);
     } catch  {
-      alert("Lỗi cập nhật!");
+      toast.error("Lỗi cập nhật!");
     } finally {
       setUploading(false);
     }

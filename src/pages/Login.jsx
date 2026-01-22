@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import api from '../api';
 import { Link } from 'react-router-dom'; // Thêm Link để điều hướng sang Register
+import { toast } from 'react-toastify';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -16,11 +17,11 @@ const Login = () => {
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('userId', res.data.user.id); 
 
-      alert("Đăng nhập thành công!");
+      toast.success("🚀 Đăng nhập thành công!");
       window.location.href = '/'; 
     } catch (err) {
       console.error(err);
-      alert("Sai thông tin đăng nhập");
+      toast.error("Sai thông tin đăng nhập");
     }
   };
 
@@ -73,7 +74,7 @@ const Login = () => {
   return (
     <div style={containerStyle}>
       <div style={cardStyle}>
-        <h1 style={{ color: '#1877f2', marginBottom: '10px', fontSize: '32px' }}>SocialApp</h1>
+        <h1 style={{ color: '#1877f2', marginBottom: '10px', fontSize: '32px' }}>KaWeb</h1>
         <p style={{ color: '#606770', marginBottom: '20px', fontSize: '15px' }}>Chào mừng bạn quay trở lại!</p>
         
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column' }}>

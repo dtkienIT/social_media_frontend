@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import CommentSection from '../components/CommentSection';
+import { toast } from 'react-toastify';
 
 const Profile = () => {
   const { userId } = useParams();
@@ -71,7 +72,7 @@ const Profile = () => {
     if (!window.confirm("Bạn có muốn xóa bài viết này không?")) return;
     try {
       await api.delete(`/posts/${postId}`);
-      alert("Đã xóa bài viết thành công!");
+      toast.success("Đã xóa bài viết thành công!");
       
       // Cập nhật giao diện ngay lập tức
       setUserPosts(prev => {
@@ -80,7 +81,7 @@ const Profile = () => {
         return updated;
       });
     } catch  {
-      alert("Không thể xóa bài viết này.");
+      toast.error("Không thể xóa bài viết này.");
     }
   };
 

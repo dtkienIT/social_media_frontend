@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
+import { toast } from 'react-toastify';
 
 const Register = () => {
   const [formData, setFormData] = useState({ fullName: '', email: '', password: '' });
@@ -12,10 +13,10 @@ const Register = () => {
     try {
       
       await api.post('/auth/register', formData);
-      alert("Đăng ký thành công! Hãy đăng nhập.");
+      toast.success("Đăng ký thành công! Hãy đăng nhập.");
       navigate('/login');
     } catch (err) {
-      alert(err.response?.data?.message || "Lỗi đăng ký");
+      toast.error(err.response?.data?.message || "Lỗi đăng ký");
     }
   };
 
@@ -68,7 +69,7 @@ const Register = () => {
   return (
     <div style={containerStyle}>
       <div style={cardStyle}>
-        <h1 style={{ color: '#1877f2', marginBottom: '5px', fontSize: '32px' }}>SocialApp</h1>
+        <h1 style={{ color: '#1877f2', marginBottom: '5px', fontSize: '32px' }}>Kaweb</h1>
         <h2 style={{ color: '#050505', marginBottom: '10px', fontSize: '24px' }}>Tạo tài khoản mới</h2>
         <p style={{ color: '#606770', marginBottom: '20px', fontSize: '15px' }}>Nhanh chóng và dễ dàng.</p>
         
