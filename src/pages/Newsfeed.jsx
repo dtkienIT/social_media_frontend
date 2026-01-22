@@ -157,6 +157,7 @@ const Newsfeed = () => {
               <div style={{ display: "flex", alignItems: "center", marginBottom: "12px" }}>
                 <img
                   src={post.User?.avatar || "https://placehold.co/40"}
+                  onClick={() => openImage(post.User?.avatar || "https://placehold.co/40")}
                   style={{ width: "40px", height: "40px", borderRadius: "50%", marginRight: "10px", objectFit: "cover" }}
                   alt="avatar"
                 />
