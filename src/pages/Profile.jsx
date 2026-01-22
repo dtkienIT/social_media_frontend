@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import api, { BACKEND_DOMAIN } from '../api';
 
 const Profile = () => {
@@ -11,24 +11,22 @@ const Profile = () => {
   
   const myId = String(localStorage.getItem('userId') || "").trim();
 
-  // Hàm xử lý link ảnh: Ưu tiên link Cloudinary từ Backend trả về
+  // Xử lý ảnh thông minh: ưu tiên link Cloudinary (https)
   const getImageUrl = (path) => {
     if (!path) return 'https://placehold.co/150';
-    if (path.startsWith('http')) return path; // Trả về link Cloudinary ngay lập tức
-    return `${BACKEND_DOMAIN}${path}`; // Dự phòng cho ảnh cũ
+    if (path.startsWith('http')) return path; 
+    return `${BACKEND_DOMAIN}${path}`;
   };
 
   const fetchProfileData = useCallback(async () => {
     try {
       setLoading(true);
-      // 1. Lấy thông tin user
+      // 1. Lấy thông tin user (Khớp với route: router.get('/:userId', ...))
       const userRes = await api.get(`/users/${userId}`);
-      // Dựa trên image_8f71fa.png, data nằm trong userRes.data.user
-      const userData = userRes.data.user || userRes.data;
-      setProfileUser(userData);
+      setProfileUser(userRes.data.user); 
 
-      // 2. Lấy bài viết
-      const postsRes = await api.get(`/posts/user/${userId}`);
+      // 2. Lấy bài viết (Khớp với route: router.get('/posts/:userId', ...))
+      const postsRes = await api.get(`/users/posts/${userId}`);
       setUserPosts(postsRes.data);
     } catch (err) {
       console.error("Lỗi tải Profile:", err);
@@ -46,9 +44,7 @@ const Profile = () => {
 
   return (
     <div style={{ maxWidth: '700px', margin: '0 auto', padding: '20px' }}>
-      <Link to="/" style={{ textDecoration: 'none', color: '#1877f2', fontWeight: 'bold' }}>← Quay lại Bảng tin</Link>
-      
-      <div style={{ background: '#fff', padding: '30px', borderRadius: '12px', textAlign: 'center', marginTop: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+      <div style={{ background: '#fff', padding: '30px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
         <img 
           src={getImageUrl(profileUser.avatar)} 
           style={{ width: '130px', height: '130px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #f0f2f5' }}
@@ -60,20 +56,24 @@ const Profile = () => {
         {myId === String(userId) && (
           <button 
             onClick={() => navigate('/edit-profile')}
-            style={{ marginTop: '10px', padding: '8px 20px', borderRadius: '6px', cursor: 'pointer', border: 'none', backgroundColor: '#e4e6eb', fontWeight: 'bold' }}
+            style={{ marginTop: '15px', padding: '8px 20px', borderRadius: '6px', cursor: 'pointer', border: 'none', backgroundColor: '#e4e6eb', fontWeight: 'bold' }}
           >
             ⚙️ Chỉnh sửa thông tin cá nhân
           </button>
         )}
       </div>
 
-      <h3 style={{ marginTop: '30px', color: '#65676b' }}>Bài viết của bạn</h3>
-      {userPosts.map(post => (
-        <div key={post.id} style={{ background: '#fff', padding: '20px', borderRadius: '8px', marginTop: '15px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-          <p>{post.content}</p>
-          {post.image && <img src={getImageUrl(post.image)} style={{ width: '100%', borderRadius: '8px', marginTop: '10px' }} alt="Post" />}
-        </div>
-      ))}
+      <h3 style={{ marginTop: '30px' }}>Bài viết của bạn</h3>
+      {userPosts.length === 0 ? (
+        <p style={{ textAlign: 'center', color: '#999' }}>Chưa có bài viết nào.</p>
+      ) : (
+        userPosts.map(post => (
+          <div key={post.id} style={{ background: '#fff', padding: '20px', borderRadius: '8px', marginTop: '15px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+            <p>{post.content}</p>
+            {post.image && <img src={getImageUrl(post.image)} style={{ width: '100%', borderRadius: '8px', marginTop: '10px' }} alt="Post" />}
+          </div>
+        ))
+      )}
     </div>
   );
 };
