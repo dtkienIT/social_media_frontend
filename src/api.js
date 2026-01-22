@@ -4,7 +4,6 @@ const api = axios.create({
   baseURL: 'https://social-media-jev1.onrender.com/api',
 });
 
-// Tự động thêm token vào mỗi request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
