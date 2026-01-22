@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api';
+import { useNavigate } from 'react-router-dom';
+
 
 const Profile = () => {
   const { userId } = useParams(); 
   const [userPosts, setUserPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+  const navigate = useNavigate();
   const myId = String(localStorage.getItem('userId') || "").trim();
 
   const fetchUserPosts = useCallback(async () => {
@@ -61,6 +63,15 @@ const Profile = () => {
               style={{ position: 'absolute', top: '15px', right: '15px', background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: '4px', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold' }}
             >
               XÓA BÀI
+            </button>
+          )}
+
+          {myId === String(userId).trim() && (
+            <button 
+              onClick={() => navigate('/edit-profile')} 
+              style={{ marginTop: '10px', padding: '5px 15px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ddd' }}
+              >
+              ⚙️ Chỉnh sửa thông tin
             </button>
           )}
 
