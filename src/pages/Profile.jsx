@@ -1,62 +1,86 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../api';
-import { useNavigate } from 'react-router-dom';
-
 
 const Profile = () => {
   const { userId } = useParams(); 
-  const [userPosts, setUserPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [userPosts, setUserPosts] = useState([]);
+  const [profileUser, setProfileUser] = useState(null); // Lưu thông tin người dùng đang xem
+  const [loading, setLoading] = useState(true);
+  
   const myId = String(localStorage.getItem('userId') || "").trim();
 
-  const fetchUserPosts = useCallback(async () => {
+  const fetchProfileData = useCallback(async () => {
     if (!userId || userId === "null") return setLoading(false);
     try {
-      const res = await api.get(`/posts/all`);
-      // Lọc bài viết của người dùng này
-      const filtered = res.data.filter(p => String(p.userId).trim() === String(userId).trim());
+      // 1. Lấy tất cả bài viết và lọc theo userId
+      const postsRes = await api.get(`/posts/all`);
+      const filtered = postsRes.data.filter(p => String(p.userId).trim() === String(userId).trim());
       setUserPosts(filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-    } catch {
-      console.error("Lỗi tải bài viết");
+
+      // 2. Tìm thông tin User từ bài viết đầu tiên hoặc một API lấy user chi tiết (nếu có)
+      // Ở đây ta tận dụng dữ liệu User đi kèm trong bài viết
+      if (filtered.length > 0) {
+        setProfileUser(filtered[0].User);
+      }
+    } catch  {
+      console.error("Lỗi tải dữ liệu profile");
     } finally {
       setLoading(false);
     }
   }, [userId]);
 
   useEffect(() => {
-    fetchUserPosts();
-  }, [fetchUserPosts]);
+    fetchProfileData();
+  }, [fetchProfileData]);
 
   const handleDelete = async (postId) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa bài viết này?")) {
+    if (window.confirm("Bạn có chắc muốn xóa?")) {
       try {
         await api.delete(`/posts/${postId}`);
         setUserPosts(prev => prev.filter(post => post.id !== postId));
-      } catch {
-        alert("Lỗi: Không thể xóa bài viết!");
-      }
+      } catch { alert("Lỗi xóa bài!"); }
     }
   };
 
   if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>Đang tải...</div>;
-  if (!userId || userId === "null") return <div style={{ textAlign: 'center', marginTop: '50px' }}>Không tìm thấy người dùng. Hãy đăng nhập lại.</div>;
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
-      <Link to="/" style={{ textDecoration: 'none', color: '#1877f2', marginBottom: '20px', display: 'block' }}>← Quay lại Bảng tin</Link>
+      <Link to="/" style={{ textDecoration: 'none', color: '#1877f2', marginBottom: '20px', display: 'inline-block' }}>← Quay lại Bảng tin</Link>
       
-      <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-        <h2>Trang cá nhân</h2>
-        <p style={{ fontSize: '12px', color: '#999' }}>ID: {userId}</p>
-        {myId === String(userId).trim() && <b style={{ color: '#42b72a' }}>Đây là bạn</b>}
+      {/* --- PHẦN ĐẦU TRANG CÁ NHÂN (CHỈ HIỆN 1 LẦN) --- */}
+      <div style={{ background: '#fff', padding: '30px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+        <img 
+          src={profileUser?.avatar ? `https://social-media-jev1.onrender.com${profileUser.avatar}` : 'https://via.placeholder.com/100'} 
+          style={{ width: '100px', height: '100px', borderRadius: '50%', marginBottom: '15px', border: '4px solid #f0f2f5', objectFit: 'cover' }} 
+          alt="avatar" 
+        />
+        
+        {/* HIỂN THỊ TÊN THAY VÌ ID */}
+        <h2 style={{ margin: '0 0 10px 0' }}>{profileUser?.fullName || "Người dùng"}</h2>
+        
+        {/* NÚT CHỈNH SỬA DUY NHẤT Ở ĐÂY */}
+        {myId === String(userId).trim() && (
+          <div style={{ marginTop: '15px' }}>
+            <span style={{ display: 'block', color: '#42b72a', fontWeight: 'bold', marginBottom: '10px' }}>Đây là bạn</span>
+            <button 
+              onClick={() => navigate('/edit-profile')}
+              style={{ padding: '8px 20px', borderRadius: '6px', border: '1px solid #ddd', cursor: 'pointer', background: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px', margin: '0 auto' }}
+            >
+              ⚙️ Chỉnh sửa thông tin
+            </button>
+          </div>
+        )}
       </div>
 
+      <h3 style={{ marginBottom: '15px' }}>Bài viết của bạn</h3>
+
+      {/* --- DANH SÁCH BÀI VIẾT --- */}
       {userPosts.map(post => (
         <div key={post.id} style={{ background: '#fff', padding: '15px', borderRadius: '8px', marginBottom: '15px', position: 'relative', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
           
-          {/* NÚT XÓA MÀU ĐỎ - Chỉ hiện trên trang của mình */}
           {myId === String(userId).trim() && (
             <button 
               onClick={() => handleDelete(post.id)}
@@ -66,19 +90,12 @@ const Profile = () => {
             </button>
           )}
 
-          {myId === String(userId).trim() && (
-            <button 
-              onClick={() => navigate('/edit-profile')} 
-              style={{ marginTop: '10px', padding: '5px 15px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ddd' }}
-              >
-              ⚙️ Chỉnh sửa thông tin
-            </button>
-          )}
-
-          <p style={{ marginTop: '10px' }}>{post.content}</p>
-          {post.image && <img src={post.image} style={{ width: '100%', borderRadius: '8px' }} alt="" />}
+          <p style={{ marginTop: '10px', fontSize: '15px' }}>{post.content}</p>
+          {post.image && <img src={post.image} style={{ width: '100%', borderRadius: '8px', marginTop: '10px' }} alt="" />}
         </div>
       ))}
+      
+      {userPosts.length === 0 && <p style={{ textAlign: 'center', color: '#65676b' }}>Chưa có bài viết nào.</p>}
     </div>
   );
 };
