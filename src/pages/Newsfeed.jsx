@@ -34,11 +34,31 @@ const Newsfeed = () => {
   };
 
   const handleLike = async (postId) => {
-    if (!token) return alert("Vui lòng đăng nhập!");
-    try {
-      const res = await api.put(`/posts/${postId}/like`);
-      setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: res.data.likes } : p));
-    } catch (err) { console.error(err); }
+    if (!token) return alert("Vui lòng đăng nhập để thực hiện tính năng này!");
+
+  try {
+    // 1. Gọi API PUT /api/posts/:id/like (Khớp với image_7f7651.png)
+    // Lưu ý: Nếu baseURL của bạn đã có /api, thì chỉ cần /posts/${postId}/like
+    const res = await api.put(`/posts/${postId}/like`);
+
+    // 2. Cập nhật state local ngay lập tức dựa trên dữ liệu Backend trả về
+    // Backend của bạn thường trả về mảng likes mới hoặc object bài viết đã cập nhật
+    setPosts(prevPosts => 
+      prevPosts.map(post => 
+        // Tìm đúng bài viết vừa nhấn Like để cập nhật số lượng tim
+        post.id === postId 
+          ? { ...post, likes: res.data.likes } 
+          : post
+      )
+    );
+  } catch (err) {
+    console.error("Lỗi khi tương tác Like:", err);
+    // Nếu lỗi 403 hoặc 401, có thể token đã hết hạn
+    if (err.response?.status === 401 || err.response?.status === 403) {
+      alert("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.");
+      handleLogout();
+    }
+  }
   };
 
   if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>Đang tải bảng tin...</div>;
